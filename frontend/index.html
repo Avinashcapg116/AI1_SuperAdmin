@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Ai1 - India's Super App</title>
+  
+  <!-- iOS Safari & Android Web App Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ai1">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="theme-color" content="#0066FF">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="manifest" href="/static/manifest.json">
+  
+  <!-- Leaflet Map CSS & JS with mobile touch support -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+  
+  <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+<!-- RESPONSIVE TESTING & DEVICE TOOLBAR (Visible on Desktop / Tablets) -->
+<div class="desktop-toolbar" id="desktopToolbar">
+  <div class="toolbar-group">
+    <span style="font-weight: 800; color: #60A5FA;">📱 Device Viewport:</span>
+    <button class="toolbar-pill active" onclick="setDeviceMode('default', this)">iPhone 15 Pro (393px)</button>
+    <button class="toolbar-pill" onclick="setDeviceMode('samsung', this)">Galaxy S24 (412px)</button>
+    <button class="toolbar-pill" onclick="setDeviceMode('tablet', this)">iPad / Tablet (768px)</button>
+    <button class="toolbar-pill" onclick="setDeviceMode('full', this)">Full Screen</button>
+  </div>
+
+  <div class="toolbar-group">
+    <span style="font-weight: 800; color: #34D399;">📳 Haptics:</span>
+    <button class="toolbar-pill active" id="hapticsToggleBtn" onclick="toggleHaptics()">ON (Vibrate 15ms)</button>
+
+    <span style="font-weight: 800; color: #FBBF24; margin-left: 8px;">📶 Network:</span>
+    <select id="networkSpeedSelect" onchange="simulateNetworkSpeed(this.value)" style="background:#1F2937; color:#D1D5DB; border:1px solid #374151; border-radius:6px; padding:2px 6px; font-size:11px;">
+      <option value="5g">5G (Ultra Fast)</option>
+      <option value="4g">4G (Standard)</option>
+      <option value="2g">2G Lite (Low Bandwidth)</option>
+    </select>
+  </div>
+</div>
+
+<div class="app-container device-iphone" id="appContainer">
+
+  <!-- TOP HEADER -->
+  <header class="top-header">
+    <div class="header-row-1">
+      <div class="brand-badge">
+        <span>Ai1</span>
+        <span class="india-flag">🇮🇳</span>
+      </div>
+
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <select id="languageSelect" onchange="changeLanguage(this.value)" style="border: 1px solid var(--border-light); background: var(--bg-light); color: var(--text-dark); border-radius: 6px; padding: 3px 6px; font-size: 11px; font-weight: 700;">
+          <option value="en">English (EN)</option>
+          <option value="hi">हिंदी (HI)</option>
+          <option value="kn">ಕನ್ನಡ (KN)</option>
+          <option value="ta">தமிழ் (TA)</option>
+          <option value="te">తెలుగు (TE)</option>
+        </select>
+
+        <button class="role-switcher-pill" id="roleToggleBtn" onclick="toggleRoleApp()">
+          Role: <span id="currentRoleText">Customer</span> ▾
+        </button>
+
+        <button onclick="toggleDarkMode()" style="border:none; background:none; cursor:pointer; font-size:15px; padding: 2px;" title="Toggle Dark Mode">🌓</button>
+      </div>
+    </div>
+
+    <div class="header-row-2">
+      <div class="location-chip" onclick="showPincodeModal()">
+        <span>📍</span>
+        <span id="currentLocationText">Indiranagar, Bengaluru (560038)</span>
+        <span style="font-size: 10px;">▾</span>
+      </div>
+
+      <div class="wallet-badge" onclick="openWalletModal()">
+        <span>₹<span id="headerWalletBalance">3,500</span></span>
+        <span class="coins-pill"><span id="headerAi1Coins">250</span> 🪙</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- SEARCH & ASSISTANT INPUT BAR -->
+  <div class="ai-search-bar">
+    <span style="font-size: 14px;">🔍</span>
+    <input type="text" id="globalSearchInput" placeholder="Ask Ai1: 'Book cab to airport and add travel insurance'..." onkeydown="handleSearchKey(event)">
+    <button class="mic-btn" id="headerMicBtn" onclick="openAssistantModal(true)" title="Speak with Ai1 Voice">🎙️</button>
+  </div>
+
+  <!-- ACTIVE ORDER / TRAY -->
+  <div class="active-tray" id="activeTray" onclick="openActiveOrderDetails()">
+    <div class="active-tray-info">
+      <div class="active-tray-icon" id="activeTrayIcon">⚡</div>
+      <div>
+        <div class="active-tray-title" id="activeTrayTitle">Ai1 SmartGrid Active</div>
+        <div class="active-tray-desc" id="activeTrayDesc">Charging Session: 4.2 kWh delivered • Tata Power 60kW</div>
+      </div>
+    </div>
+    <div style="font-size: 18px;">➔</div>
+  </div>
+
+  <!-- MAIN CUSTOMER VIEW -->
+  <main id="customerView">
+    <!-- MODULE GRID -->
+    <div class="module-grid">
+      <!-- 1. Quick Commerce -->
+      <div class="module-card active" id="mod-qc" onclick="selectModule('qc')">
+        <span class="module-card-tag">10-15m</span>
+        <div class="module-card-icon">⚡</div>
+        <div class="module-card-title">Quick Commerce</div>
+      </div>
+
+      <!-- 2. Ride Hailing -->
+      <div class="module-card" id="mod-rides" onclick="selectModule('rides')">
+        <span class="module-card-tag">Surge 1.1x</span>
+        <div class="module-card-icon">🚗</div>
+        <div class="module-card-title">Ride Hailing</div>
+      </div>
+
+      <!-- 3. EV Charging Map -->
+      <div class="module-card" id="mod-ev" onclick="selectModule('ev')">
+        <span class="module-card-tag electric">Live Grid</span>
+        <div class="module-card-icon">🔋</div>
+        <div class="module-card-title">EV Charging</div>
+      </div>
+
+      <!-- 4. Home Services -->
+      <div class="module-card" id="mod-home" onclick="selectModule('home')">
+        <div class="module-card-icon">🏠</div>
+        <div class="module-card-title">Home Services</div>
+      </div>
+
+      <!-- 5. Mechanic & RSA -->
+      <div class="module-card" id="mod-mechanic" onclick="selectModule('mechanic')">
+        <span class="module-card-tag" style="background:var(--danger);">SOS</span>
+        <div class="module-card-icon">🔧</div>
+        <div class="module-card-title">Mechanic & SOS</div>
+      </div>
+
+      <!-- 6. Travel -->
+      <div class="module-card" id="mod-travel" onclick="selectModule('travel')">
+        <div class="module-card-icon">✈️</div>
+        <div class="module-card-title">Travel & PNR</div>
+      </div>
+
+      <!-- 7. Insurance Vault -->
+      <div class="module-card" id="mod-insurance" onclick="selectModule('insurance')">
+        <div class="module-card-icon">🛡️</div>
+        <div class="module-card-title">Insurance Vault</div>
+      </div>
+
+      <!-- 8. Payments & Bills -->
+      <div class="module-card" id="mod-wallet" onclick="selectModule('wallet')">
+        <div class="module-card-icon">💳</div>
+        <div class="module-card-title">Pay & Wallet</div>
+      </div>
+
+      <!-- 9. Ai1 Voice Assistant -->
+      <div class="module-card" id="mod-assistant" onclick="openAssistantModal()">
+        <span class="module-card-tag" style="background:#7C3AED;">5 Indic</span>
+        <div class="module-card-icon">🤖</div>
+        <div class="module-card-title">Ai1 Assistant</div>
+      </div>
+    </div>
+
+    <!-- DYNAMIC MODULE CONTAINER -->
+    <div id="moduleContentArea" class="section-wrapper">
+      <!-- Injected via JavaScript -->
+    </div>
+
+    <!-- PROACTIVE SUGGESTIONS -->
+    <div class="section-wrapper">
+      <div class="section-header">
+        <span class="section-title">Smart Ai1 Suggestions</span>
+        <span class="section-action" onclick="fetchSuggestions()">Refresh</span>
+      </div>
+      <div id="suggestionsList"></div>
+    </div>
+  </main>
+
+  <!-- PARTNER APP VIEW (Gig worker console) -->
+  <main id="partnerView" style="display: none; padding: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div>
+        <h2 style="font-size: 18px; font-weight: 800;">Partner Console</h2>
+        <p style="font-size: 12px; color: var(--text-muted);">Gig Workforce & Operator Management</p>
+      </div>
+      <select id="partnerRoleSelect" onchange="loadPartnerDashboard(this.value)" style="border: 1px solid var(--border-light); padding: 6px; border-radius: 8px; font-weight: 700;">
+        <option value="rider">Delivery Rider (Quick Commerce)</option>
+        <option value="driver">Cab Driver (Tata Nexon EV)</option>
+        <option value="service_pro">Service Professional (AC/Clean)</option>
+        <option value="mechanic">Emergency RSA Mechanic</option>
+        <option value="ev_operator">EV Station CPO / Operator</option>
+      </select>
+    </div>
+    <div id="partnerDashboardContent"></div>
+  </main>
+
+  <!-- PLATFORM ADMIN VIEW -->
+  <main id="adminView" style="display: none; padding: 16px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+      <div>
+        <h2 style="font-size: 18px; font-weight: 800;">Platform Admin</h2>
+        <p style="font-size: 12px; color: var(--text-muted);">GMV, RBI/IRDAI/DPDP Audit Trail</p>
+      </div>
+      <button class="btn-primary" style="width: auto; padding: 6px 12px; font-size: 12px;" onclick="exportMyData()">Export DPDP Data</button>
+    </div>
+    <div id="adminMetricsContent"></div>
+    <div style="margin-top: 16px;">
+      <h3 style="font-size: 14px; font-weight: 700; margin-bottom: 8px;">Compliance & Security Audit Log</h3>
+      <div id="adminAuditLogs"></div>
+    </div>
+  </main>
+
+  <!-- FLOATING AI ASSISTANT FAB -->
+  <div class="floating-ai-fab" onclick="openAssistantModal()">
+    <span>🤖</span>
+    <span>Ask Ai1</span>
+  </div>
+
+  <!-- BOTTOM NAVIGATION -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="navTo('home')">
+      <span class="nav-item-icon">🏠</span>
+      <span>Home</span>
+    </button>
+    <button class="nav-item" onclick="selectModule('qc')">
+      <span class="nav-item-icon">⚡</span>
+      <span>10m Store</span>
+    </button>
+    <button class="nav-item" onclick="selectModule('ev')">
+      <span class="nav-item-icon">🔋</span>
+      <span>EV Grid</span>
+    </button>
+    <button class="nav-item" onclick="selectModule('rides')">
+      <span class="nav-item-icon">🚗</span>
+      <span>Rides</span>
+    </button>
+    <button class="nav-item" onclick="selectModule('wallet')">
+      <span class="nav-item-icon">💳</span>
+      <span>Wallet</span>
+    </button>
+  </nav>
+
+  <!-- ==================== MODALS & SHEETS WITH GESTURE HANDLES ==================== -->
+
+  <!-- 1. AI ASSISTANT BOTTOM SHEET -->
+  <div class="modal-overlay" id="assistantModal" onclick="closeSheetOnClickOutside(event, 'assistantModal')">
+    <div class="sheet-content">
+      <div class="sheet-handle" onclick="closeModal('assistantModal')"></div>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <div style="background: linear-gradient(135deg, #0066FF, #7C3AED); color: white; width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;">🤖</div>
+          <div>
+            <h3 style="font-size: 15px; font-weight: 800;">Ai1 Smart Assistant</h3>
+            <p style="font-size: 11px; color: var(--text-muted);" id="assistantLangBadge">English • Voice & Chat Active</p>
+          </div>
+        </div>
+        <button onclick="closeModal('assistantModal')" style="border:none; background:none; font-size: 22px; cursor: pointer; color:var(--text-muted);">✕</button>
+      </div>
+
+      <!-- Quick Action Chips -->
+      <div style="display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 10px;" id="assistantQuickChips">
+        <button class="add-btn" style="white-space: nowrap;" onclick="sendAssistantQuery('Book a cab to the airport and add travel insurance')">✈️ Airport Cab + Insurance</button>
+        <button class="add-btn" style="white-space: nowrap;" onclick="sendAssistantQuery('Order milk and bread and recharge my FASTag for 500')">🥛 Milk + FASTag ₹500</button>
+        <button class="add-btn" style="white-space: nowrap;" onclick="sendAssistantQuery('Find a fast EV charger near Indiranagar and book an AC servicing slot for tomorrow')">🔋 EV Charger + AC Service</button>
+        <button class="add-btn" style="white-space: nowrap;" onclick="sendAssistantQuery('Send 500 to Rahul')">💸 Send ₹500 UPI</button>
+      </div>
+
+      <!-- Messages Stream -->
+      <div id="chatMessages" style="max-height: 280px; overflow-y: auto; -webkit-overflow-scrolling: touch; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;">
+        <!-- Injected messages -->
+      </div>
+
+      <!-- Proposal Confirmation Card (Two-phase commit) -->
+      <div id="proposalContainer" style="display: none;"></div>
+
+      <!-- Input Bar -->
+      <div style="display: flex; gap: 8px; align-items: center; margin-top: 8px;">
+        <input type="text" id="assistantMessageInput" placeholder="Ask or speak..." style="flex:1; padding: 10px 14px; border-radius: 20px; border: 1px solid var(--border-light); font-size: 14px;" onkeydown="if(event.key==='Enter') submitAssistantChat()">
+        <button class="mic-btn" id="voiceMicBtn" onclick="startVoiceInput()">🎙️</button>
+        <button class="btn-primary" style="width: auto; padding: 8px 16px; border-radius: 20px;" onclick="submitAssistantChat()">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. EV STATION DETAILS & RESERVATION SHEET -->
+  <div class="modal-overlay" id="evStationModal" onclick="closeSheetOnClickOutside(event, 'evStationModal')">
+    <div class="sheet-content">
+      <div class="sheet-handle" onclick="closeModal('evStationModal')"></div>
+      <div id="evStationModalBody"></div>
+    </div>
+  </div>
+
+  <!-- 3. LIVE EV CHARGING SCREEN -->
+  <div class="modal-overlay" id="evLiveSessionModal" onclick="closeSheetOnClickOutside(event, 'evLiveSessionModal')">
+    <div class="sheet-content">
+      <div class="sheet-handle" onclick="closeModal('evLiveSessionModal')"></div>
+      <div id="evLiveSessionBody"></div>
+    </div>
+  </div>
+
+  <!-- 4. RIDE DETAILS / SOS MODAL -->
+  <div class="modal-overlay" id="rideModal" onclick="closeSheetOnClickOutside(event, 'rideModal')">
+    <div class="sheet-content">
+      <div class="sheet-handle" onclick="closeModal('rideModal')"></div>
+      <div id="rideModalBody"></div>
+    </div>
+  </div>
+
+  <!-- 5. WALLET TOP-UP & UPI MODAL -->
+  <div class="modal-overlay" id="walletModal" onclick="closeSheetOnClickOutside(event, 'walletModal')">
+    <div class="sheet-content">
+      <div class="sheet-handle" onclick="closeModal('walletModal')"></div>
+      <div id="walletModalBody"></div>
+    </div>
+  </div>
+
+  <!-- 6. QC CART & CHECKOUT MODAL -->
+  <div class="modal-overlay" id="cartModal" onclick="closeSheetOnClickOutside(event, 'cartModal')">
+    <div class="sheet-content">
+      <div class="sheet-handle" onclick="closeModal('cartModal')"></div>
+      <div id="cartModalBody"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

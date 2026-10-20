@@ -1,0 +1,18 @@
+{
+  "name": "Ai1 - India's Super App",
+  "short_name": "Ai1",
+  "description": "Unified Quick Commerce, Home Services, Mobility, Travel, Payments, and Real-Time EV Charging with Multilingual AI.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFFFFF",
+  "theme_color": "#0066FF",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230066FF'/><text x='50%' y='55%' font-family='system-ui, -apple-system, sans-serif' font-weight='900' font-size='42' fill='white' text-anchor='middle' dominant-baseline='middle'>Ai1</text><circle cx='80' cy='25' r='6' fill='%23FF9900'/></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

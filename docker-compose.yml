@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  ai1-backend:
+    build: .
+    container_name: ai1-superapp
+    ports:
+      - "8000:8000"
+    environment:
+      - PYTHONPATH=.
+      - DATABASE_URL=postgresql://ai1:ai1superpass@ai1-postgres:5432/ai1_db
+      - REDIS_URL=redis://ai1-redis:6379/0
+    depends_on:
+      - ai1-postgres
+      - ai1-redis
+    restart: unless-stopped
+
+  ai1-postgres:
+    image: postgis/postgis:15-3.3
+    container_name: ai1-postgres
+    environment:
+      POSTGRES_USER: ai1
+      POSTGRES_PASSWORD: ai1superpass
+      POSTGRES_DB: ai1_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  ai1-redis:
+    image: redis:7-alpine
+    container_name: ai1-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redisdata:/data
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  redisdata:
